@@ -1,0 +1,54 @@
+{
+    "broker_host": "localhost",
+    "broker_port": 1883,
+    "devices": [
+        {
+            "device_type": "AC",
+            "room_type": "Kitchen",
+            "publish_topic": "devices/ac",
+            "device_id": "ac_1"
+        },
+        {
+            "device_type": "AC",
+            "room_type": "BR1",
+            "publish_topic": "devices/ac",
+            "device_id": "ac_2"
+        },
+        {
+            "device_type": "AC",
+            "room_type": "BR2",
+            "publish_topic": "devices/ac",
+            "device_id": "ac_3"
+        },
+        {
+            "device_type": "AC",
+            "room_type": "Living",
+            "publish_topic": "devices/ac",
+            "device_id": "ac_4"
+        },
+        {
+            "device_type": "LIGHT",
+            "room_type": "Kitchen",
+            "publish_topic": "devices/light",
+            "device_id": "light_1"
+        },
+        {
+            "device_type": "LIGHT",
+            "room_type": "BR1",
+            "publish_topic": "devices/light",
+            "device_id": "light_2"
+        },
+        {
+            "device_type": "LIGHT",
+            "room_type": "BR2",
+            "publish_topic": "devices/light",
+            "device_id": "light_3"
+        },
+        {
+            "device_type": "LIGHT",
+            "room_type": "Living",
+            "publish_topic": "devices/light",
+            "device_id": "light_4"
+        }
+    ]
+}
