@@ -29,19 +29,27 @@ ac_device_list = []
 for device in config['devices']:
     if device['device_type'] == 'LIGHT':
         light_device_list.append(
-            Light_Device(device['device_id'], device['room_type'], device['publish_topic'], SERVER_HOST, SERVER_PORT))
+            Light_Device(device['device_id'], device['room_type'],  SERVER_HOST, SERVER_PORT))
     elif device['device_type'] == 'AC':
         ac_device_list.append(
-            AC_Device(device['device_id'], device['room_type'], device['publish_topic'], SERVER_HOST, SERVER_PORT))
+            AC_Device(device['device_id'], device['room_type'],  SERVER_HOST, SERVER_PORT))
     else:
         print(" {} is not supported ".format(device))
 
-print(" ##### list of lights :  {} ".format(len(light_device_list)))
-for light in light_device_list:
-    print(light)
-print("\n ##### list of acs :  {} ".format(len(ac_device_list)))
-for ac in ac_device_list:
-    print(ac)
+# print(" ##### list of lights :  {} ".format(len(light_device_list)))
+# for light in light_device_list:
+#     print(light)
+
+# print("\n ##### list of acs :  {} ".format(len(ac_device_list)))
+# for ac in ac_device_list:
+#     print(ac)
+
+# time.sleep(20000)
+
+# print("Registered Devices :")
+# for registered_device in edge_server_1.get_registered_device_list():
+#     print(registered_device)
 
 print("\nSmart Home Simulation stopped.")
+
 edge_server_1.terminate()

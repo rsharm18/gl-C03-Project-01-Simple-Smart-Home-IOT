@@ -1,22 +1,19 @@
-import datetime
-
 import paho.mqtt.client as mqtt
+
+from model.ActiveConstants import ActiveTopics
+from model.Registration_Request import Registration_Request
 
 HOST = "localhost"
 PORT = 1883
 
 
 class AC_Device():
-    # Register topic name
-    REGISTER_DEVICE_TOPIC_NAME = "devices/register"
-
     _MIN_TEMP = 18
     _MAX_TEMP = 32
 
     _VALID_SWITCH_STATUS = ['ON', 'OFF']
 
-
-    def __init__(self, device_id, room, publish_topic, server_host='localhost', server_port=1883):
+    def __init__(self, device_id, room, server_host='localhost', server_port=1883):
 
         self._device_id = device_id
         self._room_type = room
@@ -27,7 +24,7 @@ class AC_Device():
         self._server_host = server_host
         self._server_port = server_port
 
-        self._publish_topic = publish_topic
+        self._publish_topic = '{}/#'.format(device_id)
 
         self.client = mqtt.Client(self._device_id)
         self.client.on_connect = self._on_connect
@@ -44,25 +41,22 @@ class AC_Device():
 
     # calling registration method to register the device
     def _register_device(self, device_id, room_type, device_type):
-        payload = {
-            "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "device_id": device_id,
-            "device_type": device_type,
-            "room_type": room_type
-        }
-        self.client.publish(self.REGISTER_DEVICE_TOPIC_NAME, payload)
+        registration = Registration_Request(device_id, room_type, device_type)
+        # publish the register message to
+        self.client.publish(ActiveTopics.DEVICE_REGISTER_REQUEST_TOPIC_NAME.value, registration.to_json())
 
     # Connect method to subscribe to various topics. 
     def _on_connect(self, client, userdata, flags, result_code):
-        pass
+        # print("AC is Connected with result code " + str(result_code))
+        client.subscribe(self._publish_topic)
 
-    def _on_disconnect(self):
-        pass
+    def _on_disconnect(self, user_data, rc):
+        print("Disconnected with result code " + str(rc))
 
     # method to process the recieved messages and publish them on relevant topics
     # this method can also be used to take the action based on received commands
     def _on_message(self, client, userdata, msg):
-        pass
+        print("Received ", msg.topic, msg.payload.decode('utf-8'), "retain", msg.retain, "qos", msg.qos, str(userdata))
 
     # Getting the current switch status of devices 
     def _get_switch_status(self):

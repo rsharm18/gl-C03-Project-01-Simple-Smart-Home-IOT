@@ -1,5 +1,9 @@
 import paho.mqtt.client as mqtt
 
+from model.ActiveConstants import ActiveTopics, ActiveDeviceActionTypes, ActiveMessageStatus
+from model.Device_Input import Device_Input
+from model.Registration_Request import Registration_Request
+
 WAIT_TIME = 0.25
 
 
@@ -25,13 +29,14 @@ class Edge_Server:
 
     # Connect method to subscribe to various topics.     
     def _on_connect(self, client, userdata, flags, result_code):
-        print("Connected with result code " + str(result_code))
-        client.subscribe("test")
+        print("Edge Server is Connected with result code " + str(result_code))
+        client.subscribe("devices/#")
 
     # method to process the recieved messages and publish them on relevant topics 
     # this method can also be used to take the action based on received commands
     def _on_message(self, client, userdata, msg):
-        print(msg.topic,str(msg.payload), "retain", msg.retain, "qos", msg.qos, str(userdata) )
+        print(msg.topic, msg.payload.decode('utf-8'), "retain", msg.retain, "qos", msg.qos, str(userdata))
+        self.handle_topic(msg.topic, msg.payload.decode('utf-8'))
 
     # Returning the current registered list
     def get_registered_device_list(self):
@@ -45,3 +50,19 @@ class Edge_Server:
     # based on the request received
     def set(self):
         pass
+
+    def handle_topic(self, topic_name, payload):
+        if topic_name == ActiveTopics.DEVICE_REGISTER_REQUEST_TOPIC_NAME.value:
+            self.device_registration_handler(Registration_Request.from_json(payload))
+        else:
+            print(" {} topic is not supported! ".format(topic_name))
+
+    def device_registration_handler(self, payload: Registration_Request):
+        self._registered_list.append(payload)
+        registration_confirmation: Device_Input = Device_Input(
+            input_type=ActiveDeviceActionTypes.REGISTRATION_RESPONSE.value, message='Registration Successful',
+            status=ActiveMessageStatus.SUCCESS.value)
+        self.send_message_to_device(ActiveTopics.DEVICE_REGISTER_RESPONSE_TOPIC_NAME.value.format(payload.device_id), registration_confirmation)
+
+    def send_message_to_device(self, topic_name, device_payload: Device_Input):
+        self.client.publish(topic_name, device_payload.to_json())
