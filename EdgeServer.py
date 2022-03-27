@@ -6,6 +6,7 @@ import paho.mqtt.client as mqtt
 from model.ActiveConstants import ActiveTopics, ActiveDeviceActionTypes, ActiveMessageStatus, ActiveDeviceTypes, \
     ActiveRooms
 from model.Device_Input import Device_Input
+from model.Device_Update_Model import Device_Update_Model
 from model.Registration_Request import Registration_Request
 
 WAIT_TIME = 0.25
@@ -49,27 +50,48 @@ class Edge_Server:
     # Getting the status for the connected devices
     def get_status(self):
         for device in self.get_registered_device_list():
-                self.get_status_by_device_id(device.device_id)
+            self.get_device_values_by_device_id(device.device_id)
 
-    def get_status_by_device_type(self, device_type: ActiveDeviceTypes):
+    def get_device_values_by_device_type(self, device_type: ActiveDeviceTypes):
         for device in self.get_registered_device_list():
             if device.device_type == device_type.name:
-                self.get_status_by_device_id(device.device_id)
+                self.get_device_values_by_device_id(device.device_id)
 
-    def get_status_by_room(self, room: ActiveRooms):
+    def get_device_values_by_room(self, room: ActiveRooms):
         for device in self.get_registered_device_list():
             if device.room_type == room.value:
-                self.get_status_by_device_id(device.device_id)
+                self.get_device_values_by_device_id(device.device_id)
 
-    def get_status_by_device_id(self, device_id):
-        device = tuple(filter(lambda dev: dev.device_id == device_id, self.get_registered_device_list()))
-        if len(device) > 0:
-            self._get_device_status(device_id)
+    def get_device_values_by_device_id(self, device_id):
+        # device = tuple(filter(lambda dev: dev.device_id == device_id, self.get_registered_device_list()))
+        for device in self.get_registered_device_list():
+            if device.device_id == device_id:
+                self._get_device_status(device.device_id)
+
+    def set_device_values__by_device_id(self, device_id, update_values: Device_Update_Model):
+        # device = tuple(filter(lambda dev: dev.device_id == device_id, self.get_registered_device_list()))
+        for device in self.get_registered_device_list():
+            if device.device_id == device_id:
+                self._set_device_status(device_id, update_values)
+                break
+
+    def set_device_values__by_device_type(self, device_type: ActiveDeviceTypes,update_values: Device_Update_Model):
+        for device in self.get_registered_device_list():
+            if device.device_type == device_type.name:
+                self.set_device_values__by_device_id(device.device_id,update_values)
+                break;
+
+    def set_device_values__by_room(self, room: ActiveRooms,update_values: Device_Update_Model):
+        for device in self.get_registered_device_list():
+            if device.room_type == room.value:
+                self.set_device_values__by_device_id(device.device_id,update_values)
+                break
 
     # Controlling and performing the operations on the devices
     # based on the request received
-    def set(self):
-        pass
+    def set_status(self,update_values: Device_Update_Model):
+        for device in self.get_registered_device_list():
+            self.set_device_values__by_device_id(device.device_id,update_values)
 
     def handle_topic(self, topic_name, payload):
         if topic_name == ActiveTopics.DEVICE_REGISTER_REQUEST_TOPIC_NAME.value:
@@ -95,6 +117,10 @@ class Edge_Server:
         }
         self.send_message_to_device(ActiveTopics.DEVICE_STATUS_REQUEST_TOPIC_NAME.value.format(device_id),
                                     json.dumps(data), qos=0)
+
+    def _set_device_status(self, device_id, update_values: Device_Update_Model):
+        self.send_message_to_device(ActiveTopics.DEVICE_STATUS_UPDATE_REQUEST_TOPIC_NAME.value.format(device_id),
+                                    update_values.to_json(), qos=0)
 
     def _process_device_status(self, data):
         data = json.loads(data)
