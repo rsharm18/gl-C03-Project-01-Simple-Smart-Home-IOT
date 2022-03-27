@@ -4,6 +4,7 @@ from model.BaseModel import BaseModel
 
 
 class Registration_Request(BaseModel):
+
     def __init__(self, device_id, room_type, device_type):
         self.device_id = device_id
         self.room_type = room_type

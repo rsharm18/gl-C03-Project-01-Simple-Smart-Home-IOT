@@ -1,25 +1,28 @@
+import json
+
 import paho.mqtt.client as mqtt
 
-from model.ActiveConstants import ActiveTopics
+from model.ActiveConstants import ActiveTopics, ActiveMessageStatus, ActiveDeviceTypes, SwitchStatus
+from model.Device_Input import Device_Input
+from model.Device_Update_Model import Device_Update_Model
 from model.Registration_Request import Registration_Request
 
 HOST = "localhost"
 PORT = 1883
 
 
-class AC_Device():
+class AC_Device:
     _MIN_TEMP = 18
     _MAX_TEMP = 32
-
-    _VALID_SWITCH_STATUS = ['ON', 'OFF']
 
     def __init__(self, device_id, room, server_host='localhost', server_port=1883):
 
         self._device_id = device_id
         self._room_type = room
         self._temperature = 22
-        self._device_type = "AC"
+        self._device_type = ActiveDeviceTypes.AC.name
         self._device_registration_flag = False
+        self._switch_status = SwitchStatus.OFF.value
 
         self._server_host = server_host
         self._server_port = server_port
@@ -33,7 +36,7 @@ class AC_Device():
         self.client.connect(HOST, PORT, keepalive=60)
         self.client.loop_start()
         self._register_device(self._device_id, self._room_type, self._device_type)
-        self._switch_status = "OFF"
+
 
     def __str__(self):
         return 'Device Type: {}, Id: {}, assigned to room : {}'.format(self._device_type, self._device_id,
@@ -56,7 +59,8 @@ class AC_Device():
     # method to process the recieved messages and publish them on relevant topics
     # this method can also be used to take the action based on received commands
     def _on_message(self, client, userdata, msg):
-        print("Received ", msg.topic, msg.payload.decode('utf-8'), "retain", msg.retain, "qos", msg.qos, str(userdata))
+        # print("Received ", msg.topic, msg.payload.decode('utf-8'), "retain", msg.retain, "qos", msg.qos, str(userdata))
+        self._handle_topic(msg.topic, msg.payload.decode('utf-8'))
 
     # Getting the current switch status of devices 
     def _get_switch_status(self):
@@ -64,11 +68,8 @@ class AC_Device():
 
     # Setting the the switch of devices
     def _set_switch_status(self, switch_state):
-        if (self._VALID_SWITCH_STATUS.index(switch_state) > -1):
-            self._switch_status = switch_state
-            print("{} is set to {} state ".format(self._device_id, self._switch_status))
-        else:
-            print("{} is an invalid state ".format(switch_state))
+        self._switch_status = switch_state
+        self._send_local_device_status()
 
     # Getting the temperature for the devices
     def _get_temperature(self):
@@ -81,3 +82,41 @@ class AC_Device():
             print("{} is set to {} temperature ".format(self._device_id, self._temperature))
         else:
             print("{} is an invalid temperatue ".format(temperature))
+
+    def _handle_topic(self, topic_name, payload):
+        if topic_name == ActiveTopics.DEVICE_REGISTER_RESPONSE_TOPIC_NAME.value.format(self._device_id):
+            self._handle_device_registration_response(Device_Input.from_json(payload))
+        elif topic_name == ActiveTopics.DEVICE_STATUS_REQUEST_TOPIC_NAME.value.format(self._device_id):
+            self._send_local_device_status()
+        elif topic_name == ActiveTopics.DEVICE_STATUS_UPDATE_REQUEST_TOPIC_NAME.value.format(self._device_id):
+            self._handle_device_status_update_request(Device_Update_Model.from_json(payload))
+        else:
+            print(" {} topic is not supported! ".format(topic_name))
+
+    def _handle_device_registration_response(self, payload: Device_Input):
+        if payload.status == ActiveMessageStatus.SUCCESS.name:
+            self._device_registration_flag = True
+            print("AC-DEVICE Registered! - Registration status is available for '{}' : True".format(self._device_id))
+        else:
+            self._device_registration_flag = False
+            print("AC-DEVICE registration failed! Registration status is available for '{}' : False".format(
+                self._device_id))
+
+    def _send_local_device_status(self):
+        data = {
+            'device_id': self._device_id,
+            'switch_state': self._switch_status,
+            'temperature': self._temperature
+        }
+        # payload:Device_Input=Device_Input(input_type=ActiveDeviceActionTypes.STATUS)
+        self.client.publish(ActiveTopics.DEVICE_STATUS_RESPONSE_TOPIC_NAME.value, json.dumps(data))
+
+    def _handle_device_status_update_request(self, update_values: Device_Update_Model):
+        variables = vars(self)
+        updated_variables = vars(update_values)
+        for var, value in updated_variables.items():
+            if (var in variables and value is not None):
+                self.__setattr__(var, value)
+        # print(self)
+        # self._set_switch_status(data['switch_status'])
+        self._send_local_device_status()
