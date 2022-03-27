@@ -1,6 +1,9 @@
+import json
+
 import paho.mqtt.client as mqtt
 
-from model.ActiveConstants import ActiveTopics
+from model.ActiveConstants import ActiveTopics, ActiveMessageStatus, ActiveDeviceTypes
+from model.Device_Input import Device_Input
 from model.Registration_Request import Registration_Request
 
 HOST = "localhost"
@@ -18,7 +21,7 @@ class AC_Device():
         self._device_id = device_id
         self._room_type = room
         self._temperature = 22
-        self._device_type = "AC"
+        self._device_type = ActiveDeviceTypes.AC.name
         self._device_registration_flag = False
 
         self._server_host = server_host
@@ -56,7 +59,8 @@ class AC_Device():
     # method to process the recieved messages and publish them on relevant topics
     # this method can also be used to take the action based on received commands
     def _on_message(self, client, userdata, msg):
-        print("Received ", msg.topic, msg.payload.decode('utf-8'), "retain", msg.retain, "qos", msg.qos, str(userdata))
+        # print("Received ", msg.topic, msg.payload.decode('utf-8'), "retain", msg.retain, "qos", msg.qos, str(userdata))
+        self._handle_topic(msg.topic, msg.payload.decode('utf-8'))
 
     # Getting the current switch status of devices 
     def _get_switch_status(self):
@@ -81,3 +85,27 @@ class AC_Device():
             print("{} is set to {} temperature ".format(self._device_id, self._temperature))
         else:
             print("{} is an invalid temperatue ".format(temperature))
+
+    def _handle_topic(self, topic_name, payload):
+        if topic_name == ActiveTopics.DEVICE_REGISTER_RESPONSE_TOPIC_NAME.value.format(self._device_id):
+            self._handle_device_registration_response(Device_Input.from_json(payload))
+        elif topic_name == ActiveTopics.DEVICE_STATUS_REQUEST_TOPIC_NAME.value.format(self._device_id):
+            self._send_local_device_status()
+        else:
+            print(" {} topic is not supported! ".format(topic_name))
+
+    def _handle_device_registration_response(self, payload: Device_Input):
+        if payload.status == ActiveMessageStatus.SUCCESS.name:
+            print("AC-DEVICE Registered! - Registration status is available for '{}' : True".format(self._device_id))
+        else:
+            print("AC-DEVICE registration failed! Registration status is available for '{}' : False".format(
+                self._device_id))
+
+    def _send_local_device_status(self):
+        data = {
+            'device_id': self._device_id,
+            'switch_state': self._switch_status,
+            'intensity': self._temperature
+        }
+        # payload:Device_Input=Device_Input(input_type=ActiveDeviceActionTypes.STATUS)
+        self.client.publish(ActiveTopics.DEVICE_STATUS_RESPONSE_TOPIC_NAME.value, json.dumps(data))
