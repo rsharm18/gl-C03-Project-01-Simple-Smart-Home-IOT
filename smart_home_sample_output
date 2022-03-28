@@ -50,7 +50,7 @@ The Registered devices on Edge-Server:
 
 Status based on device_id:
 
-Command ID 1 request is intiated.
+Command ID 1 request is initiated.
 
 Here is the current device-status for light_1: {'device_id': 'light_1', 'switch_state': 'OFF', 'intensity': 'LOW'}
 
@@ -58,7 +58,7 @@ Command ID 1 is executed.
 
 Status based on device_id:
 
-Command ID 2 request is intiated.
+Command ID 2 request is initiated.
 
 Here is the current device-status for light_2: {'device_id': 'light_2', 'switch_state': 'OFF', 'intensity': 'LOW'}
 
@@ -66,7 +66,7 @@ Command ID 2 is executed.
 
 Status based on device_id:
 
-Command ID 3 request is intiated.
+Command ID 3 request is initiated.
 
 Here is the current device-status for light_3: {'device_id': 'light_3', 'switch_state': 'OFF', 'intensity': 'LOW'}
 
@@ -74,7 +74,7 @@ Command ID 3 is executed.
 
 Status based on device_id:
 
-Command ID 4 request is intiated.
+Command ID 4 request is initiated.
 
 Here is the current device-status for light_4: {'device_id': 'light_4', 'switch_state': 'OFF', 'intensity': 'LOW'}
 
@@ -82,7 +82,7 @@ Command ID 4 is executed.
 
 Status based on device_id:
 
-Command ID 5 request is intiated.
+Command ID 5 request is initiated.
 
 Here is the current device-status for light_5: {'device_id': 'light_5', 'switch_state': 'OFF', 'intensity': 'LOW'}
 
@@ -90,7 +90,7 @@ Command ID 5 is executed.
 
 Status based on device_id:
 
-Command ID 6 request is intiated.
+Command ID 6 request is initiated.
 
 Here is the current device-status for ac_1: {'device_id': 'ac_1', 'switch_state': 'OFF', 'temperature': 22}
 
@@ -98,7 +98,7 @@ Command ID 6 is executed.
 
 Status based on device_id:
 
-Command ID 7 request is intiated.
+Command ID 7 request is initiated.
 
 Here is the current device-status for ac_2: {'device_id': 'ac_2', 'switch_state': 'OFF', 'temperature': 22}
 
@@ -106,7 +106,7 @@ Command ID 7 is executed.
 
 Status based on device_id:
 
-Command ID 8 request is intiated.
+Command ID 8 request is initiated.
 
 Here is the current device-status for ac_3: {'device_id': 'ac_3', 'switch_state': 'OFF', 'temperature': 22}
 
@@ -116,7 +116,7 @@ Command ID 8 is executed.
 
 Status based on: LIGHT DEVICE TYPE
 
-Command ID 9 request is intiated.
+Command ID 9 request is initiated.
 
 Here is the current device-status for light_5: {'device_id': 'light_5', 'switch_state': 'OFF', 'intensity': 'LOW'}
 
@@ -132,7 +132,7 @@ Command ID 9 is executed.
 
 Status based on: AC DEVICE TYPE
 
-Command ID 10 request is intiated.
+Command ID 10 request is initiated.
 
 Here is the current device-status for ac_1: {'device_id': 'ac_1', 'switch_state': 'OFF', 'temperature': 22}
 
@@ -146,7 +146,7 @@ Command ID 10 is executed.
 
 Status based on room:
 
-Command ID 11 request is intiated.
+Command ID 11 request is initiated.
 
 Here is the current device-status for light_5: {'device_id': 'light_5', 'switch_state': 'OFF', 'intensity': 'LOW'}
 
@@ -160,7 +160,7 @@ Command ID 11 is executed.
 
 Status based on room:
 
-Command ID 12 request is intiated.
+Command ID 12 request is initiated.
 
 Here is the current device-status for light_2: {'device_id': 'light_2', 'switch_state': 'OFF', 'intensity': 'LOW'}
 
@@ -184,7 +184,7 @@ Command ID 12 is executed.
 
 Controlling the devices based on ID:
 
-Command ID 13 request is intiated.
+Command ID 13 request is initiated.
 
 Here is the current device-status for light_1: {'device_id': 'light_1', 'switch_state': 'ON', 'intensity': 'LOW'}
 
@@ -192,7 +192,7 @@ Command ID 13 is executed.
 
 Controlling the devices based on ID:
 
-Command ID 14 request is intiated.
+Command ID 14 request is initiated.
 
 Here is the current device-status for ac_1: {'device_id': 'ac_1', 'switch_state': 'ON', 'temperature': 22}
 
@@ -200,7 +200,7 @@ Command ID 14 is executed.
 
 Controlling the devices based on ID:
 
-Command ID 15 request is intiated.
+Command ID 15 request is initiated.
 
 Here is the current device-status for light_1: {'device_id': 'light_1', 'switch_state': 'ON', 'intensity': 'MEDIUM'}
 
@@ -208,7 +208,7 @@ Command ID 15 is executed.
 
 Controlling the devices based on ID:
 
-Command ID 16 request is intiated.
+Command ID 16 request is initiated.
 
 Here is the current device-status for ac_1: {'device_id': 'ac_1', 'switch_state': 'ON', 'temperature': 29}
 
@@ -216,7 +216,7 @@ Command ID 16 is executed.
 
 Controlling the devices based on ID:
 
-Command ID 17 request is intiated.
+Command ID 17 request is initiated.
 
 Here is the current device-status for light_2: {'device_id': 'light_2', 'switch_state': 'ON', 'intensity': 'HIGH'}
 
@@ -226,7 +226,7 @@ Command ID 17 is executed.
 
 Controlling the devices based on TYPE:
 
-Command ID 18 request is intiated.
+Command ID 18 request is initiated.
 
 Here is the current device-status for ac_2: {'device_id': 'ac_2', 'switch_state': 'ON', 'temperature': 21}
 
@@ -238,7 +238,7 @@ Command ID 18 is executed.
 
 Controlling the devices based on TYPE:
 
-Command ID 19 request is intiated.
+Command ID 19 request is initiated.
 
 Here is the current device-status for light_1: {'device_id': 'light_1', 'switch_state': 'ON', 'intensity': 'MEDIUM'}
 
@@ -256,7 +256,7 @@ Command ID 19 is executed.
 
 Controlling the devices based on room:
 
-Command ID 20 request is intiated.
+Command ID 20 request is initiated.
 
 Here is the current device-status for ac_3: {'device_id': 'ac_3', 'switch_state': 'ON', 'temperature': 30}
 
@@ -268,7 +268,7 @@ Command ID 20 is executed.
 
 Controlling the devices based on room:
 
-Command ID 21 request is intiated.
+Command ID 21 request is initiated.
 
 Here is the current device-status for light_2: {'device_id': 'light_2', 'switch_state': 'ON', 'intensity': 'MEDIUM'}
 
@@ -290,7 +290,7 @@ Command ID 21 is executed.
 
 Controlling the devices based on room:
 
-Command ID 22 request is intiated.
+Command ID 22 request is initiated.
 
 Here is the current device-status for ac_3: {'device_id': 'ac_3', 'switch_state': 'ON', 'temperature': 28}
 
@@ -304,7 +304,7 @@ Command ID 22 is executed.
 
 Controlling the devices based on room:
 
-Command ID 23 request is intiated.
+Command ID 23 request is initiated.
 
 Here is the current device-status for light_1: {'device_id': 'light_1', 'switch_state': 'ON', 'intensity': 'MEDIUM'}
 
@@ -332,7 +332,7 @@ Command ID 23 is executed.
 
 Controlling the devices based on ID:
 
-Command ID 24 request is intiated.
+Command ID 24 request is initiated.
 
 Temperature Change FAILED. Invalid temperature value received
 
@@ -342,7 +342,7 @@ Command ID 24 is executed.
 
 Controlling the devices based on ID:
 
-Command ID 25 request is intiated.
+Command ID 25 request is initiated.
 
 Intensity Change FAILED. Invalid Light Intensity level received
 
@@ -354,7 +354,7 @@ Command ID 25 is executed.
 
 Status based on room:
 
-Command ID 26 request is intiated.
+Command ID 26 request is initiated.
 
 Here is the current device-status for light_2: {'device_id': 'light_2', 'switch_state': 'ON', 'intensity': 'MEDIUM'}
 
