@@ -8,7 +8,7 @@ from ACDevice import AC_Device
 from Automate_Execution import Automate_Execution
 from EdgeServer import Edge_Server
 from LightDevice import Light_Device
-from model.ActiveConstants import ActiveDeviceTypes, ActiveRooms, SwitchStatus, ActiveLightIntensity
+from contants.ActiveConstants import ActiveDeviceTypes, ActiveRooms, ActiveSwitchStatus, ActiveLightIntensity
 from model.Device_Update_Model import Device_Update_Model
 from util.Application_Util import Application_Util
 
@@ -29,24 +29,14 @@ edge_server_1 = Edge_Server('edge_server_1', SERVER_HOST, SERVER_PORT)
 time.sleep(WAIT_TIME)
 
 # Creating the light and ac devices
-print("Intitate the device creation and registration process.")
-
-active_device_types: List[ActiveDeviceTypes] = [ActiveDeviceTypes.LIGHT, ActiveDeviceTypes.AC]
-active_rooms: List[ActiveRooms] = [ActiveRooms.KITCHEN, ActiveRooms.BR1, ActiveRooms.BR2, ActiveRooms.LIVING]
-active_light_intensity: List[ActiveLightIntensity] = [ActiveLightIntensity.OFF, ActiveLightIntensity.LOW,
-                                                      ActiveLightIntensity.MEDIUM, ActiveLightIntensity.HIGH]
+print("Initiate the device creation and registration process.")
 
 
-def get_random_device_update_model():
-    return Device_Update_Model(
-        switch_status=SwitchStatus.ON.value,
-        temperature=random.randint(18, 32),
-        light_intensity=random.choice(active_light_intensity).value
-    )
-
-
+# create and register the devices
 light_device_list = []
 ac_device_list = []
+
+print("******************* REGISTRATION OF THE DEVICES THROUGH SERVER : START *******************")
 for device in config['devices']:
     if device['device_type'] == 'LIGHT':
         light_device_list.append(
@@ -58,22 +48,14 @@ for device in config['devices']:
         print(" {} is not supported ".format(device))
     print()
 
+time.sleep(WAIT_TIME)
+
+print("******************* REGISTRATION OF THE DEVICES THROUGH SERVER : END *******************")
+# get registered devices
 registered_device_list = edge_server_1.get_registered_device_list()
-# print(" ##### list of lights :  {} ".format(len(light_device_list)))
-# for light in light_device_list:
-#     print(light)
 
-# print("\n ##### list of acs :  {} ".format(len(ac_device_list)))
-# for ac in ac_device_list:
-#     print(ac)
-
-# time.sleep(20000)
-
-# print("Registered Devices :")
-# for registered_device in edge_server_1.get_registered_device_list():
-#     print(registered_device)
 print("\n\n\n")
-exec_mode = input("Select Mode! \n Enter \n A for automatic execution \n I for interactive (READ only) ")
+exec_mode = 'A' #input("Select Mode! \n Enter \n A for automatic execution \n I for interactive (READ only) ")
 while True:
 
     if exec_mode == 'A':

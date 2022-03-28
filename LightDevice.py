@@ -3,7 +3,7 @@ import string
 
 import paho.mqtt.client as mqtt
 
-from model.ActiveConstants import ActiveTopics, ActiveMessageStatus, ActiveDeviceTypes, SwitchStatus, \
+from contants.ActiveConstants import ActiveTopics, ActiveMessageStatus, ActiveDeviceTypes, ActiveSwitchStatus, \
     ActiveLightIntensity
 from model.Device_Input import Device_Input
 from model.Device_Update_Model import Device_Update_Model
@@ -22,10 +22,11 @@ class Light_Device:
         self._light_intensity = ActiveLightIntensity.LOW.value
         self._device_type = ActiveDeviceTypes.LIGHT.name
         self._device_registration_flag = False
-        self._switch_status = SwitchStatus.OFF.value
+        self._switch_status = ActiveSwitchStatus.OFF.value
         self._server_host = server_host
         self._server_port = server_port
 
+        # topic name format <device_id>/*
         self._publish_topic = '{}/#'.format(device_id)
 
         self.client = mqtt.Client(self._device_id)
@@ -40,9 +41,10 @@ class Light_Device:
         return 'Device Type: {}, Id: {}, assigned to room : {}'.format(self._device_type, self._device_id,
                                                                        self._room_type)
 
+    # calling registration method to register the device
     def _register_device(self, device_id, room_type, device_type):
         registration = Registration_Request(device_id, room_type, device_type)
-        # publish the register message to
+        # publish the register request message
         self.client.publish(ActiveTopics.DEVICE_REGISTER_REQUEST_TOPIC_NAME.value, registration.to_json())
 
     # Connect method to subscribe to various topics. 
@@ -68,16 +70,15 @@ class Light_Device:
         self._switch_status = switch_state
         self._send_local_device_status()
 
-        # Getting the device intensity for the devices
-
+    # Getting the device intensity for the devices
     def _get_light_intensity(self):
         return self._light_intensity
 
-        # Setting the device intensity for devices
-
+    # Setting the device intensity for devices
     def _set_light_intensity(self, light_intensity):
         self._light_intensity = light_intensity
 
+    # handle the device_specific messages
     def _handle_topic(self, topic_name, payload):
         if topic_name == ActiveTopics.SET_DEVICE_REGISTRATION_STATUS_TOPIC_NAME.value.format(self._device_id):
             self._handle_device_registration_response(Device_Input.from_json(payload))
@@ -88,48 +89,65 @@ class Light_Device:
         else:
             print(" {} topic is not supported! ".format(topic_name))
 
+    # process the registration ack from edge
     def _handle_device_registration_response(self, payload: Device_Input):
         if payload.status == ActiveMessageStatus.SUCCESS.name:
-            print("LIGHT-DEVICE Registered! - Registration status is available for '{}' : True".format(self._device_id))
+            self._device_registration_flag = True
         else:
-            print("LIGHT-DEVICE registration failed! Registration status is available for '{}' : False".format(
-                self._device_id))
+            self._device_registration_flag = False
 
+        print("LIGHT-DEVICE Registered! - Registration status is available for '{}' : {}".format(self._device_id,self._device_registration_flag))
+
+    # publish local device status to edge server
     def _send_local_device_status(self):
         data = {
             'device_id': self._device_id,
             'switch_state': self._switch_status,
             'intensity': self._light_intensity
         }
-        # payload:Device_Input=Device_Input(input_type=ActiveDeviceActionTypes.STATUS)
         self.client.publish(ActiveTopics.SEND_DEVICE_STATUS_TO_EDGE_TOPIC_NAME.value, json.dumps(data))
 
+    # Handle device state update command from edge server
     def _handle_device_status_update_request(self, update_values: Device_Update_Model):
+
+        # get the list of properties of the device
         variables = vars(self)
+
+        # get the list of properties from the update model
         updated_variables = vars(update_values)
 
         update_dataset = {}
+        # extract the fields that are relevant for the device and prepare the data set
         for var, value in updated_variables.items():
-            if (var in variables and value is not None):
+            if var in variables and value is not None:
                 update_dataset[var] = value
-                # self.__setattr__(var, value)
 
+        # validate the new data set
         error_list = self._validate_update_dataset(update_dataset)
-        if (len(error_list) > 0):
+
+        # if there is any validation error then send the update status as error and skip updating the object
+        if len(error_list) > 0:
             self._send_device_update_status(isError=True, payload=error_list)
         else:
+            # if there is no validation error then update the local device state and send the update status as success
             for key, value in update_dataset.items():
                 self.__setattr__(key, value)
 
-            if (self._get_switch_status() == SwitchStatus.OFF.value and self._get_light_intensity() != SwitchStatus.OFF.value):
-                self._light_intensity(ActiveLightIntensity.OFF.value)
-            # elif (self._get_switch_status() == SwitchStatus.ON.value and self._get_light_intensity() == SwitchStatus.OFF.value):
+            # if the device status is OFF then set the light intensity as LOW as well
+            if self._get_switch_status() == ActiveSwitchStatus.OFF.value and self._get_light_intensity() != ActiveLightIntensity.LOW.value:
+                self._light_intensity(ActiveLightIntensity.LOW.value)
+
+            # not sure if its needed - leaving it to showcase we can drive the device light intensity based on switch state
+            # elif (self._get_switch_status() == ActiveSwitchStatus.ON.value and self._get_light_intensity() == ActiveSwitchStatus.OFF.value):
             #     self._light_intensity(ActiveLightIntensity.LOW.value)
+
+            # send success device update command status
             self._send_device_update_status(isError=False)
-        # print(self)
-        # self._set_switch_status(data['switch_status'])
+
+        # send the device status to edge server
         self._send_local_device_status()
 
+    # send the  device update command result to edge
     def _send_device_update_status(self, isError=False, payload=None):
         if payload is None:
             payload = []
@@ -140,16 +158,18 @@ class Light_Device:
         )
         self.client.publish(ActiveTopics.DEVICE_UPDATE_COMMAND_RESULT_TOPIC_NAME.value, data.to_json())
 
+    # validate the update dataset
     def _validate_update_dataset(self, dataset=None):
         if dataset is None:
             dataset = {}
         error = []
         for key, value in dataset.items():
             error_string = self.__validate__(key, value)
-            if (len(error_string) > 0):
+            if len(error_string) > 0:
                 error.append(error_string)
         return error
 
+    # validation local to the device
     def __validate__(self, variable, value) -> string:
         if (variable == '_light_intensity' and value not in ActiveLightIntensity.__members__):
             return " {} change Failed. Invalid {} value ({}) received.".format(variable[1:len(variable)], variable,

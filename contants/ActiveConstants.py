@@ -41,11 +41,6 @@ class ActiveMessageStatus(enum.Enum):
     FAILED = "FAILED"
 
 
-class ActiveDeviceActionTypes(enum.Enum):
-    REGISTRATION_RESPONSE = "REGISTRATION_RESPONSE"
-    ACTION = "ACTION"
-
-
-class SwitchStatus(enum.Enum):
+class ActiveSwitchStatus(enum.Enum):
     ON = 'ON'
     OFF = 'OFF'

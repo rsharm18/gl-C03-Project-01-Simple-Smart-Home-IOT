@@ -3,7 +3,7 @@ from functools import reduce
 import random
 from typing import List
 
-from model.ActiveConstants import SwitchStatus, ActiveDeviceTypes, ActiveRooms, ActiveLightIntensity
+from contants.ActiveConstants import ActiveSwitchStatus, ActiveDeviceTypes, ActiveRooms, ActiveLightIntensity
 from model.Device_Update_Model import Device_Update_Model
 from util.Application_Util import Application_Util
 
@@ -15,7 +15,7 @@ active_light_intensity: List[ActiveLightIntensity] = [ActiveLightIntensity.LOW,
 
 def get_random_device_update_model():
     return Device_Update_Model(
-        switch_status=SwitchStatus.ON.value,
+        switch_status=ActiveSwitchStatus.ON.value,
         temperature=random.randint(18, 32),
         light_intensity=random.choice(active_light_intensity).value
     )
@@ -62,7 +62,7 @@ class Automate_Execution:
         command_count = Application_Util.set_device_values_by_room_type(self.edge_server_1, self.WAIT_TIME,
                                                                         active_rooms, command_count)
         print("\n******************* SETTING THE STATUS BY ENTIRE_HOME *******************\n")
-        command_count = Application_Util.get_device_values_for_entire_home(self.edge_server_1, self.WAIT_TIME,
+        command_count = Application_Util.set_device_values_for_entire_home(self.edge_server_1, self.WAIT_TIME,
                                                                            command_count)
 
         print("\n******************* SETTING UP THE STATUS AND CONTROLLING FOR INVALID REQUESTS *******************\n")
