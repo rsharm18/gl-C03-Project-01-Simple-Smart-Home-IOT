@@ -8,6 +8,7 @@ from model.ActiveConstants import ActiveTopics, ActiveDeviceActionTypes, ActiveM
 from model.Device_Input import Device_Input
 from model.Device_Update_Model import Device_Update_Model
 from model.Registration_Request import Registration_Request
+from model.Update_Command_Result import Update_Command_Result
 
 WAIT_TIME = 0.25
 
@@ -67,6 +68,7 @@ class Edge_Server:
         for device in self.get_registered_device_list():
             if device.device_id == device_id:
                 self._get_device_status(device.device_id)
+                break
 
     def set_device_values__by_device_id(self, device_id, update_values: Device_Update_Model):
         # device = tuple(filter(lambda dev: dev.device_id == device_id, self.get_registered_device_list()))
@@ -79,13 +81,11 @@ class Edge_Server:
         for device in self.get_registered_device_list():
             if device.device_type == device_type.name:
                 self.set_device_values__by_device_id(device.device_id,update_values)
-                break;
 
     def set_device_values__by_room(self, room: ActiveRooms,update_values: Device_Update_Model):
         for device in self.get_registered_device_list():
             if device.room_type == room.value:
                 self.set_device_values__by_device_id(device.device_id,update_values)
-                break
 
     # Controlling and performing the operations on the devices
     # based on the request received
@@ -96,8 +96,10 @@ class Edge_Server:
     def handle_topic(self, topic_name, payload):
         if topic_name == ActiveTopics.DEVICE_REGISTER_REQUEST_TOPIC_NAME.value:
             self._device_registration_handler(Registration_Request.from_json(payload))
-        elif topic_name == ActiveTopics.DEVICE_STATUS_RESPONSE_TOPIC_NAME.value:
+        elif topic_name == ActiveTopics.SEND_DEVICE_STATUS_TO_EDGE_TOPIC_NAME.value:
             self._process_device_status(payload)
+        elif topic_name==ActiveTopics.DEVICE_UPDATE_COMMAND_RESULT_TOPIC_NAME.value:
+            self._handle_device_update_ack(Update_Command_Result.from_json(payload))
         else:
             print(" {} topic is not supported! ".format(topic_name))
 
@@ -107,7 +109,7 @@ class Edge_Server:
         registration_confirmation: Device_Input = Device_Input(
             input_type=ActiveDeviceActionTypes.REGISTRATION_RESPONSE.value, message='Registration Successful',
             status=ActiveMessageStatus.SUCCESS.name)
-        self.send_message_to_device(ActiveTopics.DEVICE_REGISTER_RESPONSE_TOPIC_NAME.value.format(payload.device_id),
+        self.send_message_to_device(ActiveTopics.SET_DEVICE_REGISTRATION_STATUS_TOPIC_NAME.value.format(payload.device_id),
                                     registration_confirmation.to_json())
         print("Request is processed for {}.".format(payload.device_id))
 
@@ -115,11 +117,11 @@ class Edge_Server:
         data = {
             'device_id': device_id
         }
-        self.send_message_to_device(ActiveTopics.DEVICE_STATUS_REQUEST_TOPIC_NAME.value.format(device_id),
+        self.send_message_to_device(ActiveTopics.GET_DEVICE_STATUS_TOPIC_NAME.value.format(device_id),
                                     json.dumps(data), qos=0)
 
     def _set_device_status(self, device_id, update_values: Device_Update_Model):
-        self.send_message_to_device(ActiveTopics.DEVICE_STATUS_UPDATE_REQUEST_TOPIC_NAME.value.format(device_id),
+        self.send_message_to_device(ActiveTopics.DEVICE_UPDATE_REQUEST_TOPIC_NAME.value.format(device_id),
                                     update_values.to_json(), qos=0)
 
     def _process_device_status(self, data):
@@ -128,3 +130,7 @@ class Edge_Server:
 
     def send_message_to_device(self, topic_name, device_payload, qos=0):
         self.client.publish(topic_name, device_payload, qos)
+
+    def _handle_device_update_ack(self, payload:Update_Command_Result):
+        if payload.status == ActiveMessageStatus.FAILED.value:
+            print(payload.payload)

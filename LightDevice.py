@@ -1,4 +1,5 @@
 import json
+import string
 
 import paho.mqtt.client as mqtt
 
@@ -7,6 +8,7 @@ from model.ActiveConstants import ActiveTopics, ActiveMessageStatus, ActiveDevic
 from model.Device_Input import Device_Input
 from model.Device_Update_Model import Device_Update_Model
 from model.Registration_Request import Registration_Request
+from model.Update_Command_Result import Update_Command_Result
 
 HOST = "localhost"
 PORT = 1883
@@ -77,11 +79,11 @@ class Light_Device:
         self._light_intensity = light_intensity
 
     def _handle_topic(self, topic_name, payload):
-        if topic_name == ActiveTopics.DEVICE_REGISTER_RESPONSE_TOPIC_NAME.value.format(self._device_id):
+        if topic_name == ActiveTopics.SET_DEVICE_REGISTRATION_STATUS_TOPIC_NAME.value.format(self._device_id):
             self._handle_device_registration_response(Device_Input.from_json(payload))
-        elif topic_name == ActiveTopics.DEVICE_STATUS_REQUEST_TOPIC_NAME.value.format(self._device_id):
+        elif topic_name == ActiveTopics.GET_DEVICE_STATUS_TOPIC_NAME.value.format(self._device_id):
             self._send_local_device_status()
-        elif topic_name == ActiveTopics.DEVICE_STATUS_UPDATE_REQUEST_TOPIC_NAME.value.format(self._device_id):
+        elif topic_name == ActiveTopics.DEVICE_UPDATE_REQUEST_TOPIC_NAME.value.format(self._device_id):
             self._handle_device_status_update_request(Device_Input.from_json(payload))
         else:
             print(" {} topic is not supported! ".format(topic_name))
@@ -100,14 +102,56 @@ class Light_Device:
             'intensity': self._light_intensity
         }
         # payload:Device_Input=Device_Input(input_type=ActiveDeviceActionTypes.STATUS)
-        self.client.publish(ActiveTopics.DEVICE_STATUS_RESPONSE_TOPIC_NAME.value, json.dumps(data))
+        self.client.publish(ActiveTopics.SEND_DEVICE_STATUS_TO_EDGE_TOPIC_NAME.value, json.dumps(data))
 
     def _handle_device_status_update_request(self, update_values: Device_Update_Model):
         variables = vars(self)
         updated_variables = vars(update_values)
+
+        update_dataset = {}
         for var, value in updated_variables.items():
             if (var in variables and value is not None):
-                self.__setattr__(var, value)
+                update_dataset[var] = value
+                # self.__setattr__(var, value)
+
+        error_list = self._validate_update_dataset(update_dataset)
+        if (len(error_list) > 0):
+            self._send_device_update_status(isError=True, payload=error_list)
+        else:
+            for key, value in update_dataset.items():
+                self.__setattr__(key, value)
+
+            if (self._get_switch_status() == SwitchStatus.OFF.value and self._get_light_intensity() != SwitchStatus.OFF.value):
+                self._light_intensity(ActiveLightIntensity.OFF.value)
+            # elif (self._get_switch_status() == SwitchStatus.ON.value and self._get_light_intensity() == SwitchStatus.OFF.value):
+            #     self._light_intensity(ActiveLightIntensity.LOW.value)
+            self._send_device_update_status(isError=False)
         # print(self)
         # self._set_switch_status(data['switch_status'])
         self._send_local_device_status()
+
+    def _send_device_update_status(self, isError=False, payload=None):
+        if payload is None:
+            payload = []
+        data = Update_Command_Result(
+            device_id=self._device_id,
+            status=ActiveMessageStatus.FAILED.value if isError else ActiveMessageStatus.SUCCESS.value,
+            payload=payload
+        )
+        self.client.publish(ActiveTopics.DEVICE_UPDATE_COMMAND_RESULT_TOPIC_NAME.value, data.to_json())
+
+    def _validate_update_dataset(self, dataset=None):
+        if dataset is None:
+            dataset = {}
+        error = []
+        for key, value in dataset.items():
+            error_string = self.__validate__(key, value)
+            if (len(error_string) > 0):
+                error.append(error_string)
+        return error
+
+    def __validate__(self, variable, value) -> string:
+        if (variable == '_light_intensity' and value not in ActiveLightIntensity.__members__):
+            return " {} change Failed. Invalid {} value ({}) received.".format(variable[1:len(variable)], variable,
+                                                                               value)
+        return ""
